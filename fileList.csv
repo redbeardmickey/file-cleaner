@@ -1,3 +1,4 @@
 name, type
 a.html, file
-folderA, folder
+folderA\c.html, file
+folderA\folderB, folder
