@@ -1,62 +1,42 @@
-from tkinter import *
-from tkinter.filedialog import askdirectory
-from tkinter.filedialog import askopenfilename
+import os
+import csv
 
-import fileScrubber
+def main(dir, csvfileName):
+	fileNames = []
+	folderNames = []
 
-class fileScrubberGUI(Frame):
-	def __init__(self, master=None):
-		Frame.__init__(self, master)
-		self.parent = master
-		self.pack()
-		self.initUI()
+	with open(csvfileName, newline='') as csvfile:
+		reader = csv.reader(csvfile, delimiter=',', skipinitialspace=True)
+		next(reader)
 
-	def openFile(self):
-		# pass
-		self.file_opt = options = {}
-		options['defaultextension'] = '.csv'
-		options['filetypes'] = [('text files', '.csv')]
-		# options['initialdir'] = 'C:\\'
-		# options['initialfile'] = 'myfile.txt'
-		options['parent'] = self.parent
-		options['title'] = 'Select CSV file'
-		self.csvfile = askopenfilename(**self.file_opt)
-		return self.fileLabelText.set(self.csvfile)
+		for row in reader:
+			if row[1] == 'file':
+				fileNames.append(row[0])
+			if row[1] == 'folder':
+				folderNames.append(row[0])
 
-	def openTargetDir(self):
-		self.directory = askdirectory()
-		return self.targetDirLabelText.set(self.directory)
-		# pass
+	for root, dirs, files in os.walk(dir):
+		for name in files:
+			allPath = os.path.join(root, name)
+			relPath = os.path.relpath(allPath, dir)
+			# print (root)
+			# print (relPath)
+			# print (allPath)
 
-	def scrubFile(self):
-		self.scrubStatusLabelText.set('Scrubbing...')
-		return self.scrubStatusLabelText.set(fileScrubber.main(self.directory, self.csvfile))
-		# pass
+			if relPath in fileNames:
+				# print ('yes')
+				# print ('files:')
+				print ('Removing file:', os.path.join(root, name))
+				os.remove(os.path.join(root, name))
 
-	def initUI(self):
-		self.parent.title("FileScrubberGUI")
-		self.targetDirLabelText = StringVar()
-		self.targetDirLabelText.set('Please select a target directory')
-
-		self.targetDirLabel = Label(self, textvariable=self.targetDirLabelText).grid(row=0, column=0, columnspan=2, pady=(10, 10), padx=(10, 10), sticky="W")
-		self.targetDirBtn = Button(self, text='Select Directory', command=self.openTargetDir).grid(row=0, column=2, pady=(10, 10), padx=(10, 10), sticky="WE")
-
-		self.fileLabelText = StringVar()
-		self.fileLabelText.set('Please select the csv file')
-		self.fileLabel = Label(self, textvariable=self.fileLabelText).grid(row=1, column=0, columnspan=2, pady=(0, 10), padx=(10, 10), sticky="W")
-		self.fileBtn = Button(self, text='Select File', command=self.openFile).grid(row=1, column=2, pady=(0, 10), padx=(10, 10), sticky="WE")
-
-		self.scrubStatusLabelText = StringVar()
-		self.scrubStatusLabelText.set('')
-		self.scrubStatusLabel = Label(self, textvariable=self.scrubStatusLabelText).grid(row=2, column=0, columnspan=2, padx=(10, 10), pady=(0, 10), sticky="W")
-		self.scrubBtn = Button(self, text='Scrub', command=self.scrubFile).grid(row=2, column=2, padx=(10, 10), pady=(0, 10), sticky="WE")
-
-		self.exitBtn = Button(self, text='Quit', command=self.parent.destroy).grid(row=3, column=2, padx=(10, 10), pady=(0, 10), sticky="WE")
-
-def main():
-	root = Tk()
-	app = fileScrubberGUI(master=root)
-	app.mainloop()
-
+		for name in dirs:
+			allPath = os.path.join(root, name)
+			relPath = os.path.relpath(allPath, dir)
+			# print (relPath)
+			if relPath in folderNames:
+				print ('Removing folder', os.path.join(root, name))
+				os.rmdir(os.path.join(root, name))
+				
+	return 'Scrubbing finished'
 if __name__ == '__main__':
 	main()
